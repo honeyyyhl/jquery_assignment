@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>User Management Dashboard</title>
+ 
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+ 
+  <style>
+    .error-text { color: red; font-size: 0.9rem; margin-top: 3px; }
+    .error-border { border-color: red !important; }
+  </style>
+</head>
+ 
+<body class="bg-light">
+  <div class="container mt-5">
+    <div class="card shadow">
+      <div class="card-body">
+        <h3 class="mb-4">User Management Dashboard</h3>
+ 
+        <!-- User List -->
+        <div class="table-responsive">
+          <table class="table table-striped align-middle">
+            <thead class="table-dark">
+              <tr>
+                <th>Username</th>
+                <th>Fullname</th>
+                <th>Email</th>
+              </tr>
+            </thead>
+            <tbody id="userTableBody"></tbody>
+          </table>
+        </div>
+ 
+        <!-- Button JUST UNDER the user list to toggle new user dialog -->
+        <button id="add-user-btn" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#add-user-modal">
+          New User
+        </button>
+      </div>
+    </div>
+  </div>
+ 
+  <!-- Modal Dialog: Add New User -->
+  <div class="modal fade"
+       id="add-user-modal"
+       tabindex="-1"
+       role="dialog"
+       aria-labelledby="addUserModalLabel"
+       aria-hidden="true"
+       data-bs-backdrop="static"
+       data-bs-keyboard="false">
+ 
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+ 
+        <!-- Header (title + close button) -->
+       <div class="modal-header">
+  <h5 class="modal-title" id="addUserModalLabel">New User</h5>
+ 
+  <!-- Close button (X) at right corner -->
+  <button
+    type="button"
+    class="btn-close"
+    data-bs-dismiss="modal"
+    aria-label="Close">
+  </button>
+</div>
+ 
+ 
+        <!-- Body (form) -->
+        <div class="modal-body">
+          <form id="addUserForm" novalidate>
+ 
+            <div class="mb-3">
+              <label class="form-label">Username</label>
+              <input type="text" id="username" class="form-control" />
+              <div id="usernameError" class="error-text"></div>
+            </div>
+ 
+            <div class="mb-3">
+              <label class="form-label">Fullname</label>
+              <input type="text" id="fullname" class="form-control" />
+              <div id="fullnameError" class="error-text"></div>
+            </div>
+ 
+            <div class="mb-3">
+              <label class="form-label">Email</label>
+              <input type="email" id="email" class="form-control" />
+              <div id="emailError" class="error-text"></div>
+            </div>
+ 
+            <!-- Footer (buttons) -->
+            <div class="modal-footer px-0 pb-0">
+              <button type="submit" class="btn btn-primary">Create User</button>
+            </div>
+ 
+          </form>
+        </div>
+ 
+      </div>
+    </div>
+  </div>
+ 
+  <script>
+    // ===== Existing users shown in dashboard =====
+    let users = [
+      { username: "alice01", fullname: "Alice Johnson", email: "alice@example.com" },
+      { username: "bob_dev", fullname: "Bob Williams", email: "bob@example.com" }
+    ];
+ 
+    const userTableBody = document.getElementById("userTableBody");
+ 
+    function renderUsers() {
+      userTableBody.innerHTML = "";
+      users.forEach(u => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${escapeHtml(u.username)}</td>
+          <td>${escapeHtml(u.fullname)}</td>
+          <td>${escapeHtml(u.email)}</td>
+        `;
+        userTableBody.appendChild(tr);
+      });
+    }
+ 
+    function escapeHtml(text) {
+      return String(text)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+ 
+    renderUsers();
+ 
+    // ===== Form logic =====
+    const form = document.getElementById("addUserForm");
+    const usernameEl = document.getElementById("username");
+    const fullnameEl = document.getElementById("fullname");
+    const emailEl = document.getElementById("email");
+ 
+    const usernameError = document.getElementById("usernameError");
+    const fullnameError = document.getElementById("fullnameError");
+    const emailError = document.getElementById("emailError");
+ 
+    // Bootstrap 5 modal instance (used for closing after submit)
+    const modalEl = document.getElementById("add-user-modal");
+    const modalInstance = bootstrap.Modal.getOrCreateInstance(modalEl);
+ 
+    function setError(input, errorDiv, msg) {
+      if (msg) {
+        input.classList.add("error-border");
+        errorDiv.textContent = msg;
+      } else {
+        input.classList.remove("error-border");
+        errorDiv.textContent = "";
+      }
+    }
+ 
+    function clearForm() {
+      form.reset();
+      setError(usernameEl, usernameError, "");
+      setError(fullnameEl, fullnameError, "");
+      setError(emailEl, emailError, "");
+    }
+ 
+    function validEmail(email) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    }
+ 
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+ 
+      const username = usernameEl.value.trim();
+      const fullname = fullnameEl.value.trim();
+      const email = emailEl.value.trim();
+ 
+      let ok = true;
+ 
+      // Validation
+      if (!username) { setError(usernameEl, usernameError, "Username is required."); ok = false; }
+      else { setError(usernameEl, usernameError, ""); }
+ 
+      if (!fullname) { setError(fullnameEl, fullnameError, "Fullname is required."); ok = false; }
+      else { setError(fullnameEl, fullnameError, ""); }
+ 
+      if (!email) { setError(emailEl, emailError, "Email is required."); ok = false; }
+      else if (!validEmail(email)) { setError(emailEl, emailError, "Email format is invalid."); ok = false; }
+      else { setError(emailEl, emailError, ""); }
+ 
+      // If validation fails, stop
+      if (!ok) return;
+ 
+      // ===== When submit the form:
+      // 1) Create a new user
+      users.push({ username, fullname, email });
+ 
+      // 2) Clear the form
+      clearForm();
+ 
+      // 3) Close dialog
+      modalInstance.hide();
+ 
+      // 4) Display the user in the list
+      renderUsers();
+    });
+ 
+    // Optional: clear when modal closes (so it’s always clean next time)
+    modalEl.addEventListener("hidden.bs.modal", clearForm);
+  </script>
+</body>
+</html>
+ 
+ 
